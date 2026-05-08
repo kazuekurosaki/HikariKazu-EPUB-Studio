@@ -11,105 +11,103 @@
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
-        .loading-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.9); z-index:999; flex-direction:column; align-items:center; justify-content:center; color:white; }
+        .loading-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.95); z-index:999; flex-direction:column; align-items:center; justify-content:center; color:white; }
         .cover-preview { width: 140px; height: 200px; object-fit: cover; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        .chapter-img { height: 70px; width: 70px; object-fit: cover; border-radius: 10px; }
-        .status-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+        .chapter-card-img { width: 100px; flex-shrink: 0; background: #f8fafc; border-radius: 12px; padding: 6px; border: 1px solid #e2e8f0; text-align: center; }
+        .img-thumb { height: 60px; width: 100%; object-fit: cover; border-radius: 8px; margin-bottom: 4px; }
+        .shortcode-tag { background: #4f46e5; color: white; font-size: 9px; padding: 2px 5px; border-radius: 5px; font-weight: 800; cursor: pointer; transition: transform 0.2s; }
+        .shortcode-tag:active { transform: scale(0.9); }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen pb-32">
 
-    <!-- Loader -->
+    <!-- Loader Kazue Engine -->
     <div id="loader" class="loading-overlay">
         <div class="animate-spin rounded-full h-16 w-16 border-4 border-indigo-500 border-t-transparent mb-4"></div>
-        <p id="loaderText" class="font-bold tracking-widest text-sm uppercase">Hikari Engine: Processing...</p>
+        <p id="loaderText" class="font-bold tracking-widest text-sm uppercase">Hikari LN Engine...</p>
     </div>
 
     <div class="max-w-4xl mx-auto p-4 md:pt-10">
         <!-- Branding Header -->
-        <header class="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl mb-8 relative overflow-hidden flex flex-col md:flex-row justify-between items-center gap-4">
+        <header class="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl mb-8 relative overflow-hidden flex flex-col md:flex-row justify-between items-center">
             <div class="relative z-10 text-center md:text-left">
                 <h1 class="text-3xl font-extrabold tracking-tighter">HIKARI <span class="text-indigo-400">STUDIO</span></h1>
-                <p class="text-slate-400 text-xs uppercase tracking-widest font-bold">Kazue Engine v4.0 Pro</p>
-                <div id="saveStatus" class="mt-3 flex items-center gap-2 text-[10px] text-emerald-400 font-bold uppercase">
-                    <span class="status-dot bg-emerald-500 animate-pulse"></span> Draft Autosaved
+                <p class="text-slate-400 text-[10px] uppercase tracking-[0.2em] font-bold">Light Novel Edition • v5.0 Pro</p>
+                <div id="saveStatus" class="mt-3 flex items-center gap-2 text-[9px] text-emerald-400 font-bold uppercase">
+                    <span class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span> Autosave Active
                 </div>
             </div>
             <div class="absolute -right-10 -top-10 w-40 h-40 bg-indigo-600 rounded-full blur-3xl opacity-20"></div>
         </header>
 
-        <!-- Metadata & Cover Section -->
+        <!-- Metadata & Cover -->
         <div class="bg-white p-6 md:p-8 rounded-[2.5rem] shadow-sm mb-6 border border-slate-200 flex flex-col md:flex-row gap-8">
-            <!-- Cover Upload -->
             <div class="flex flex-col items-center gap-3">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Book Cover</p>
-                <div class="w-[140px] h-[200px] bg-slate-100 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-slate-300 relative overflow-hidden group">
+                <div class="w-[140px] h-[200px] bg-slate-100 rounded-2xl flex items-center justify-center border-2 border-dashed border-slate-300 relative overflow-hidden group">
                     <img id="coverDisplay" class="hidden cover-preview">
                     <div id="coverPlaceholder" class="text-center p-4">
-                        <span class="text-2xl text-slate-300">🖼️</span>
-                        <p class="text-[8px] text-slate-400 font-bold mt-2 uppercase">Klik/Drop Cover</p>
+                        <span class="text-3xl">📘</span>
+                        <p class="text-[9px] text-slate-400 font-black mt-2">COVER</p>
                     </div>
                     <input type="file" accept="image/*" onchange="handleCover(event)" class="absolute inset-0 opacity-0 cursor-pointer">
                 </div>
-                <button onclick="removeCover()" class="text-[9px] text-red-400 font-bold uppercase">Hapus Cover</button>
+                <button onclick="removeCover()" class="text-[9px] text-red-400 font-bold uppercase tracking-widest">Hapus Cover</button>
             </div>
 
-            <!-- Fields -->
             <div class="flex-1 grid grid-cols-1 gap-4">
                 <div class="space-y-1">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Judul Buku</label>
-                    <input type="text" id="title" oninput="triggerAutoSave()" class="w-full bg-slate-50 border-0 p-4 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-lg font-bold" placeholder="Judul Buku">
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Judul Novel</label>
+                    <input type="text" id="title" oninput="triggerAutoSave()" class="w-full bg-slate-50 border-0 p-4 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none text-xl font-bold" placeholder="Judul Buku">
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Pengarang</label>
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Pengarang</label>
                     <input type="text" id="author" oninput="triggerAutoSave()" class="w-full bg-slate-50 border-0 p-4 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Nama Penulis">
                 </div>
-                <div class="grid grid-cols-2 gap-2">
+                <div class="grid grid-cols-2 gap-4">
                     <div class="space-y-1">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Bahasa</label>
+                        <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Bahasa</label>
                         <input type="text" id="lang" oninput="triggerAutoSave()" class="w-full bg-slate-50 border-0 p-4 rounded-2xl outline-none" value="id">
                     </div>
-                    <div class="space-y-1">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Status Draft</label>
-                        <div class="w-full bg-slate-50 p-4 rounded-2xl text-[10px] font-bold text-indigo-500">READY</div>
+                    <div class="space-y-1 text-right">
+                        <label class="text-[10px] font-black text-slate-400 uppercase mr-1">Tipe</label>
+                        <p class="text-indigo-500 font-bold p-4">DRM-FREE</p>
                     </div>
                 </div>
                 <div class="space-y-1">
-                    <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Deskripsi / Anotasi</label>
-                    <textarea id="description" oninput="triggerAutoSave()" class="w-full bg-slate-50 border-0 p-4 rounded-2xl outline-none text-sm" rows="2" placeholder="Tentang buku ini..."></textarea>
+                    <label class="text-[10px] font-black text-slate-400 uppercase ml-1">Sinopsis / Anotasi</label>
+                    <textarea id="description" oninput="triggerAutoSave()" class="w-full bg-slate-50 border-0 p-4 rounded-2xl outline-none text-sm" rows="2" placeholder="Tulis sinopsis singkat..."></textarea>
                 </div>
             </div>
         </div>
 
-        <!-- Chapters Area -->
-        <div id="chaptersContainer" class="space-y-6"></div>
+        <!-- Chapters -->
+        <div id="chaptersContainer" class="space-y-8"></div>
 
-        <!-- Add Chapter -->
-        <button onclick="addChapter()" class="w-full mt-6 py-8 border-2 border-dashed border-slate-300 rounded-[2.5rem] text-slate-400 font-bold hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all flex flex-col items-center justify-center">
+        <button onclick="addChapter()" class="w-full mt-6 py-8 border-2 border-dashed border-slate-300 rounded-[2.5rem] text-slate-400 font-bold hover:bg-indigo-50 hover:text-indigo-600 transition-all flex flex-col items-center">
             <span class="text-2xl">+</span>
-            <span class="text-xs uppercase tracking-widest">Tambah Bab Baru</span>
+            <span class="text-xs uppercase tracking-widest font-black">Tambah Bab Baru</span>
         </button>
     </div>
 
-    <!-- Floating UI Navigation -->
+    <!-- Floating Navbar -->
     <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[95%] max-w-md bg-slate-900/90 backdrop-blur-2xl p-4 rounded-full shadow-2xl border border-white/10 flex justify-between items-center z-50">
         <div class="pl-4">
-            <p class="text-white font-bold text-sm tracking-tight" id="statsTitle">Hikari Draft</p>
+            <p class="text-white font-bold text-sm tracking-tight" id="statsTitle">Hikari Project</p>
             <p class="text-slate-400 text-[10px] uppercase font-bold" id="statsChapters">0 Bab</p>
         </div>
         <div class="flex gap-2">
-            <button onclick="clearData()" title="Reset Semua" class="p-2 text-slate-400 hover:text-red-400 transition">🗑️</button>
-            <button onclick="generateEpub()" id="btnDownload" class="bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-2.5 rounded-full font-bold text-sm shadow-lg transition transform active:scale-95">
-                DOWNLOAD
+            <button onclick="clearData()" title="Reset" class="p-2 text-slate-500 hover:text-red-400 transition">🗑️</button>
+            <button onclick="generateEpub()" id="btnDownload" class="bg-indigo-500 hover:bg-indigo-600 text-white px-8 py-2.5 rounded-full font-bold text-sm shadow-lg transition transform active:scale-95 uppercase">
+                Download
             </button>
         </div>
     </nav>
 
     <script>
-        const DB_NAME = "HikariKazueV4DB";
+        const DB_NAME = "HikariStudio_V5_Final";
         let db, chapters = [], coverData = null;
 
-        // --- Database & Autosave ---
+        // Initialize IndexedDB (Autosave)
         const request = indexedDB.open(DB_NAME, 1);
         request.onupgradeneeded = e => e.target.result.createObjectStore("state", { keyPath: "id" });
         request.onsuccess = e => { db = e.target.result; loadFromDB(); };
@@ -126,7 +124,7 @@
                 cover: coverData
             };
             db.transaction("state", "readwrite").objectStore("state").put(state);
-            document.getElementById('saveStatus').innerHTML = '<span class="status-dot bg-emerald-500"></span> Saved to Browser';
+            document.getElementById('saveStatus').innerText = "Changes Saved to Browser";
         }
 
         function loadFromDB() {
@@ -153,18 +151,18 @@
         }
 
         function triggerAutoSave() {
-            document.getElementById('saveStatus').innerHTML = '<span class="status-dot bg-amber-500 animate-pulse"></span> Saving...';
+            document.getElementById('saveStatus').innerText = "Saving Draft...";
             clearTimeout(window.saveTimeout);
             window.saveTimeout = setTimeout(saveToDB, 1500);
             updateStats();
         }
 
         function updateStats() {
-            document.getElementById('statsTitle').innerText = document.getElementById('title').value || "Hikari Draft";
-            document.getElementById('statsChapters').innerText = `${chapters.length} Bab`;
+            document.getElementById('statsTitle').innerText = document.getElementById('title').value || "Hikari Project";
+            document.getElementById('statsChapters').innerText = `${chapters.length} Bab Terdaftar`;
         }
 
-        // --- Kazue Engine: Image Optimization ---
+        // Kazue Engine: Image Process (Resize & Compress)
         async function optimizeImage(buffer, isCover = false) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -199,7 +197,6 @@
             triggerAutoSave();
         }
 
-        // --- Chapter Management ---
         function renderChapters() {
             const container = document.getElementById('chaptersContainer');
             container.innerHTML = '';
@@ -209,48 +206,45 @@
                 div.innerHTML = `
                     <div class="flex items-center justify-between mb-4">
                         <div class="flex items-center gap-3 flex-1">
-                             <span class="bg-indigo-100 text-indigo-600 text-xs font-black w-8 h-8 flex items-center justify-center rounded-xl">${idx + 1}</span>
-                             <input type="text" value="${ch.title}" oninput="chapters[${idx}].title=this.value; triggerAutoSave()" class="text-lg font-bold bg-transparent outline-none w-full border-b border-transparent focus:border-indigo-500 transition" placeholder="Judul Bab">
+                            <span class="bg-indigo-600 text-white w-8 h-8 flex items-center justify-center rounded-xl font-black text-[10px]">${idx + 1}</span>
+                            <input type="text" value="${ch.title}" oninput="chapters[${idx}].title=this.value; triggerAutoSave()" class="text-lg font-bold bg-transparent outline-none w-full border-b border-transparent focus:border-indigo-500 transition">
                         </div>
                         <div class="flex gap-1 ml-2">
                             <button onclick="move(${idx}, -1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600">▲</button>
                             <button onclick="move(${idx}, 1)" class="p-2 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-indigo-600">▼</button>
-                            <button onclick="remove(${idx})" class="p-2 text-slate-300 hover:text-red-500">🗑️</button>
+                            <button onclick="remove(${idx})" class="p-2 text-red-300">🗑️</button>
                         </div>
                     </div>
-                    
-                    <div class="bg-slate-50 p-5 rounded-3xl mb-4 border border-slate-100">
-                        <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Chapter Media</p>
-                        <div class="flex flex-wrap gap-3 mb-4" id="imgList-${idx}">
+
+                    <div class="mb-4 bg-slate-50 p-5 rounded-[2rem] border border-slate-100">
+                        <p class="text-[9px] font-black text-slate-400 mb-3 uppercase tracking-widest">Ilustrasi Bab (Klik kode untuk copy)</p>
+                        <div class="flex gap-3 overflow-x-auto pb-2">
                             ${ch.images.map((img, iIdx) => `
-                                <div class="relative group">
-                                    <img src="${URL.createObjectURL(new Blob([img.data]))}" class="chapter-img border-2 border-white shadow-sm transition group-hover:opacity-75">
-                                    <button onclick="delImg(${idx}, ${iIdx})" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 text-xs border-2 border-white">×</button>
+                                <div class="chapter-card-img">
+                                    <img src="${URL.createObjectURL(new Blob([img.data]))}" class="img-thumb shadow-sm">
+                                    <span class="shortcode-tag" onclick="copyTag('[IMG${iIdx+1}]')">[IMG${iIdx+1}]</span>
+                                    <button onclick="delImg(${idx}, ${iIdx})" class="block w-full text-[8px] mt-2 text-red-400 font-black">HAPUS</button>
                                 </div>
                             `).join('')}
-                        </div>
-                        <div class="flex flex-col md:flex-row gap-3">
-                            <input type="file" accept="image/*" onchange="upImg(event, ${idx})" class="text-[10px] flex-1 bg-white p-2 rounded-xl border border-slate-200">
-                            <div class="flex gap-2 flex-1">
-                                <input type="text" placeholder="URL Gambar (Blogger dll)" class="text-xs bg-white border border-slate-200 p-2 rounded-xl flex-1 outline-none focus:ring-1 focus:ring-indigo-500" id="urlInput-${idx}">
-                                <button onclick="handleUrlUpload(${idx})" class="bg-slate-800 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-tighter">Tambah URL</button>
+                            <div class="chapter-card-img flex flex-col items-center justify-center border-dashed border-2 min-w-[100px] min-h-[100px]">
+                                <input type="file" accept="image/*" onchange="upImg(event, ${idx})" class="absolute opacity-0 w-24 h-24 cursor-pointer">
+                                <span class="text-slate-300 text-xl">+</span>
                             </div>
                         </div>
+                        <div class="mt-4">
+                            <input type="text" placeholder="Atau tambah dari URL..." class="text-[10px] w-full p-2 border rounded-xl" id="urlInput-${idx}" onkeypress="if(event.key==='Enter') handleUrlUpload(${idx})">
+                        </div>
                     </div>
-                    
-                    <textarea oninput="chapters[${idx}].content=this.value; triggerAutoSave()" class="w-full h-48 bg-slate-50 border-0 p-6 rounded-[2rem] outline-none text-sm leading-relaxed text-slate-700 focus:ring-2 focus:ring-indigo-100 transition" placeholder="Tulis bab ini di sini...">${ch.content}</textarea>
+
+                    <textarea oninput="chapters[${idx}].content=this.value; triggerAutoSave()" class="w-full h-64 bg-slate-50 border-0 p-6 rounded-[2rem] outline-none text-sm leading-relaxed text-slate-700" placeholder="Tulis cerita Anda... Gunakan [IMG1] untuk menyisipkan gambar di posisi ini.">${ch.content}</textarea>
                 `;
                 container.appendChild(div);
             });
         }
 
-        function addChapter() { chapters.push({ title: "Bab Baru", content: "", images: [] }); renderChapters(); triggerAutoSave(); }
-        function remove(i) { if(chapters.length > 1) { chapters.splice(i, 1); renderChapters(); triggerAutoSave(); } }
-        function move(i, d) { let n = i + d; if(n >= 0 && n < chapters.length) { [chapters[i], chapters[n]] = [chapters[n], chapters[i]]; renderChapters(); triggerAutoSave(); } }
-        
         async function upImg(e, i) {
             const f = e.target.files[0]; if(!f) return;
-            toggleLoader(true, "Optimizing Media...");
+            toggleLoader(true, "Processing Media...");
             const opt = await optimizeImage(await f.arrayBuffer());
             chapters[i].images.push({ id: "hkr_"+Math.random().toString(36).substr(2,5), data: opt });
             toggleLoader(false); renderChapters(); triggerAutoSave();
@@ -258,72 +252,80 @@
 
         async function handleUrlUpload(idx) {
             const input = document.getElementById(`urlInput-${idx}`);
-            const url = input.value; if(!url) return;
-            toggleLoader(true, "Downloading External Image...");
+            if(!input.value) return;
+            toggleLoader(true, "Downloading Media...");
             try {
-                const res = await fetch(url);
+                const res = await fetch(input.value);
                 const blob = await res.blob();
                 const opt = await optimizeImage(await blob.arrayBuffer());
                 chapters[idx].images.push({ id: "hkr_"+Math.random().toString(36).substr(2,5), data: opt });
                 input.value = "";
                 renderChapters(); triggerAutoSave();
-            } catch(e) { alert("CORS Blocked: Gunakan Upload File jika URL ditolak."); }
+            } catch(e) { alert("CORS Error: Link diblokir oleh website sumber. Gunakan upload file manual."); }
             toggleLoader(false);
         }
 
         function delImg(ci, ii) { chapters[ci].images.splice(ii, 1); renderChapters(); triggerAutoSave(); }
+        function addChapter() { chapters.push({ title: "Bab Baru", content: "", images: [] }); renderChapters(); triggerAutoSave(); }
+        function move(i, d) { let n = i+d; if(n>=0 && n<chapters.length) { [chapters[i], chapters[n]] = [chapters[n], chapters[i]]; renderChapters(); triggerAutoSave(); } }
+        function remove(i) { if(chapters.length>1) { chapters.splice(i,1); renderChapters(); triggerAutoSave(); } }
+        function copyTag(t) { navigator.clipboard.writeText(t); alert("Kode "+t+" disalin. Tempel di posisi teks yang diinginkan."); }
         function toggleLoader(s, t="") { document.getElementById('loader').style.display = s?'flex':'none'; if(t) document.getElementById('loaderText').innerText = t; }
-        function clearData() { if(confirm("Hapus semua draft dari browser?")) { db.transaction("state", "readwrite").objectStore("state").clear(); location.reload(); } }
+        function clearData() { if(confirm("Hapus draft permanen?")) { db.transaction("state", "readwrite").objectStore("state").clear(); location.reload(); } }
 
-        // --- Core EPUB Generator ---
+        // Core EPUB Generator
         async function generateEpub() {
-            toggleLoader(true, "Hikari Engine: Packaging EPUB...");
+            toggleLoader(true, "Membangun File EPUB...");
             const zip = new JSZip();
-            const title = document.getElementById('title').value || "Untitled Hikari Book";
-            const author = document.getElementById('author').value || "Kazue User";
-            const lang = document.getElementById('lang').value || "id";
-            const desc = document.getElementById('description').value || "";
+            const title = document.getElementById('title').value || "Buku Hikari";
+            const author = document.getElementById('author').value || "Anonim";
             const uuid = "urn:uuid:" + self.crypto.randomUUID();
 
-            // Structure
             zip.file("mimetype", "application/epub+zip", { compression: "STORE" });
             zip.folder("META-INF").file("container.xml", `<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`);
 
             let manifest = ""; let spine = ""; let ncx = "";
-            
-            // Cover Image
+
             if(coverData) {
                 zip.folder("OEBPS/Images").file("cover.jpg", coverData);
                 manifest += `<item id="cover-img" href="Images/cover.jpg" media-type="image/jpeg" properties="cover-image"/>\n`;
             }
 
-            // Chapters & Images
             chapters.forEach((ch, i) => {
                 const f = `ch${i+1}.xhtml`;
-                let imgH = "";
-                ch.images.forEach(img => {
-                    zip.folder("OEBPS/Images").file(`${img.id}.jpg`, img.data);
-                    manifest += `<item id="${img.id}" href="Images/${img.id}.jpg" media-type="image/jpeg"/>\n`;
-                    imgH += `<div style="text-align:center;margin:1.5em 0;"><img src="../Images/${img.id}.jpg" style="max-width:100%; border-radius:10px;"/></div>\n`;
+                let contentHtml = ch.content.replace(/\n/g, '<br/>');
+
+                ch.images.forEach((img, iIdx) => {
+                    const imgID = `img_${i+1}_${iIdx+1}`;
+                    zip.folder("OEBPS/Images").file(`${imgID}.jpg`, img.data);
+                    manifest += `<item id="${imgID}" href="Images/${imgID}.jpg" media-type="image/jpeg"/>\n`;
+                    
+                    const imgTag = `<div style="text-align:center;margin:1.5em 0;"><img src="../Images/${imgID}.jpg" style="max-width:100%; border-radius:10px;"/></div>`;
+                    const shortcode = `[IMG${iIdx+1}]`;
+                    
+                    if (contentHtml.includes(shortcode)) {
+                        contentHtml = contentHtml.split(shortcode).join(imgTag);
+                    } else {
+                        contentHtml += imgTag;
+                    }
                 });
+
+                const xhtml = `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${ch.title}</title><style>body{padding:6%;line-height:1.8;font-family:serif;color:#1a1a1a;} h2{text-align:center;color:#4f46e5;border-bottom:1px solid #eee;padding-bottom:15px;}</style></head><body><h2>${ch.title}</h2><div>${contentHtml}</div></body></html>`;
                 
-                const html = `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${ch.title}</title><style>body{padding:6%;line-height:1.8;font-family:serif;color:#333;}h2{text-align:center;color:#4f46e5;border-bottom:1px solid #eee;padding-bottom:10px;margin-bottom:1.5em;}</style></head><body><h2>${ch.title}</h2>${imgH}<div style="white-space:pre-wrap;">${ch.content}</div></body></html>`;
-                
-                zip.folder("OEBPS/Text").file(f, html);
+                zip.folder("OEBPS/Text").file(f, xhtml);
                 manifest += `<item id="item${i+1}" href="Text/${f}" media-type="application/xhtml+xml"/>\n`;
                 spine += `<itemref idref="item${i+1}"/>\n`;
                 ncx += `<navPoint id="n${i+1}" playOrder="${i+1}"><navLabel><text>${ch.title}</text></navLabel><content src="Text/${f}"/></navPoint>\n`;
             });
 
-            // Metadata OPF
             const opf = `<?xml version="1.0" encoding="UTF-8"?>
-<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="pub-id" version="3.0">
+<package xmlns="http://www.idpf.org/2007/opf" unique-identifier="id" version="3.0">
     <metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
         <dc:title>${title}</dc:title>
         <dc:creator>${author}</dc:creator>
-        <dc:language>${lang}</dc:language>
-        <dc:identifier id="pub-id">${uuid}</dc:identifier>
-        <dc:description>${desc}</dc:description>
+        <dc:language>${document.getElementById('lang').value}</dc:language>
+        <dc:identifier id="id">${uuid}</dc:identifier>
+        <dc:description>${document.getElementById('description').value}</dc:description>
         <meta property="dcterms:modified">${new Date().toISOString().split('.')[0]}Z</meta>
         ${coverData ? '<meta name="cover" content="cover-img"/>' : ''}
     </metadata>
@@ -342,7 +344,6 @@
             toggleLoader(false);
         }
 
-        // SW for PWA
         if ('serviceWorker' in navigator) { navigator.serviceWorker.register('sw.js'); }
     </script>
 </body>
