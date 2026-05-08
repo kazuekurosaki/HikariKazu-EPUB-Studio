@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hikari-Kazue EPUB Studio</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .preview-img { height: 80px; width: 80px; object-fit: cover; border-radius: 12px; }
+        .loading-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(15, 23, 42, 0.9); z-index:999; flex-direction:column; align-items:center; justify-content:center; color:white; }
+        .status-pill { font-size: 10px; padding: 2px 8px; border-radius: 99px; }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen pb-32">
+
+    <div id="loader" class="loading-overlay">
+        <div class="animate-spin rounded-full h-16 w-16 border-4 border-indigo-500 border-t-transparent mb-4"></div>
+        <p id="loaderText" class="font-bold">Hikari Engine...</p>
+    </div>
+
+    <div class="max-w-4xl mx-auto p-4 md:pt-10">
+        <header class="bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl mb-8 relative overflow-hidden">
+            <div class="relative z-10">
+                <h1 class="text-3xl font-extrabold tracking-tighter">HIKARI <span class="text-indigo-400">STUDIO</span></h1>
+                <p class="text-slate-400 text-xs uppercase tracking-widest font-bold">Kazue Kurosaki Alpha • PWA Edition</p>
+                <div class="mt-4 flex gap-2">
+                    <div id="saveStatus" class="status-pill bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Auto-saved to Local</div>
+                </div>
+            </div>
+            <div class="absolute -right-10 -top-10 w-40 h-40 bg-indigo-600 rounded-full blur-3xl opacity-20"></div>
+        </header>
+
+        <!-- Metadata -->
+        <div class="bg-white p-6 rounded-[2rem] shadow-sm mb-6 border border-slate-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="text" id="title" oninput="triggerAutoSave()" class="w-full bg-slate-100 border-0 p-4 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Judul Buku">
+                <input type="text" id="author" oninput="triggerAutoSave()" class="w-full bg-slate-100 border-0 p-4 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Nama Pengarang">
+                <textarea id="description" oninput="triggerAutoSave()" class="w-full bg-slate-100 border-0 p-4 rounded-2xl md:col-span-2 outline-none" rows="1" placeholder="Anotasi Buku..."></textarea>
+            </div>
+        </div>
+
+        <div id="chaptersContainer" class="space-y-6"></div>
+
+        <button onclick="addChapter()" class="w-full mt-6 py-8 border-2 border-dashed border-slate-300 rounded-[2rem] text-slate-400 font-bold hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all">
+            + Tambah Bab Baru
+        </button>
+    </div>
+
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[95%] max-w-md bg-slate-900/90 backdrop-blur-2xl p-4 rounded-full shadow-2xl border border-white/10 flex justify-between items-center z-50">
+        <div class="pl-4">
+            <p class="text-white font-bold text-sm" id="statsTitle">Draft Hikari</p>
+            <p class="text-slate-400 text-[10px]" id="statsChapters">0 Chapters</p>
+        </div>
+        <div class="flex gap-2">
+            <button onclick="clearData()" class="p-2 text-slate-400 hover:text-red-400">🗑️</button>
+            <button onclick="generateEpub()" id="btnDownload" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-full font-bold text-sm shadow-lg">
+                Download
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // --- IndexedDB Logic (Autosave Engine) ---
+        const DB_NAME = "HikariStudioDB";
+        let db;
+        let chapters = [];
+
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = e => {
+            e.target.result.createObjectStore("state", { keyPath: "id" });
+        };
+        request.onsuccess = e => {
+            db = e.target.result;
+            loadFromDB();
+        };
+
+        function saveToDB() {
+            const state = {
+                id: "current_project",
+                title: document.getElementById('title').value,
+                author: document.getElementById('author').value,
+                description: document.getElementById('description').value,
+                chapters: chapters
+            };
+            const tx = db.transaction("state", "readwrite");
+            tx.objectStore("state").put(state);
+            document.getElementById('saveStatus').innerText = "All changes saved";
+        }
+
+        function loadFromDB() {
+            const tx = db.transaction("state", "readonly");
+            const req = tx.objectStore("state").get("current_project");
+            req.onsuccess = () => {
+                if (req.result) {
+                    document.getElementById('title').value = req.result.title || "";
+                    document.getElementById('author').value = req.result.author || "";
+                    document.getElementById('description').value = req.result.description || "";
+                    chapters = req.result.chapters || [];
+                }
+                if (chapters.length === 0) addChapter();
+                renderChapters();
+            };
+        }
+
+        function triggerAutoSave() {
+            document.getElementById('saveStatus').innerText = "Saving...";
+            clearTimeout(window.saveTimeout);
+            window.saveTimeout = setTimeout(saveToDB, 1000);
+            document.getElementById('statsTitle').innerText = document.getElementById('title').value || "Draft Hikari";
+        }
+
+        // --- Kazue Engine: Image Process ---
+        async function optimizeImage(buffer) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.src = URL.createObjectURL(new Blob([buffer]));
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width, h = img.height;
+                    if (w > 1080) { h *= 1080/w; w = 1080; }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    canvas.toBlob(b => b.arrayBuffer().then(resolve), 'image/jpeg', 0.7);
+                };
+            });
+        }
+
+        function renderChapters() {
+            const container = document.getElementById('chaptersContainer');
+            container.innerHTML = '';
+            document.getElementById('statsChapters').innerText = `${chapters.length} Chapters`;
+
+            chapters.forEach((ch, idx) => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-6 rounded-[2rem] shadow-sm border border-slate-200 relative";
+                div.innerHTML = `
+                    <div class="flex items-center justify-between mb-4">
+                        <input type="text" value="${ch.title}" oninput="chapters[${idx}].title=this.value; triggerAutoSave()" class="text-xl font-bold bg-transparent outline-none w-full border-b border-transparent focus:border-indigo-500 transition">
+                        <div class="flex gap-1 ml-2">
+                            <button onclick="move(${idx}, -1)" class="p-2 hover:bg-slate-100 rounded-lg">▲</button>
+                            <button onclick="move(${idx}, 1)" class="p-2 hover:bg-slate-100 rounded-lg">▼</button>
+                            <button onclick="remove(${idx})" class="p-2 text-red-400">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl mb-4 border border-slate-100">
+                        <div class="flex flex-wrap gap-2 mb-3">
+                            ${ch.images.map((img, iIdx) => `
+                                <div class="relative">
+                                    <img src="${URL.createObjectURL(new Blob([img.data]))}" class="preview-img border-2 border-white shadow-sm">
+                                    <button onclick="delImg(${idx}, ${iIdx})" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 text-[10px]">×</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <input type="file" accept="image/*" onchange="upImg(event, ${idx})" class="text-[10px] block w-full">
+                    </div>
+                    <textarea oninput="chapters[${idx}].content=this.value; triggerAutoSave()" class="w-full h-40 bg-slate-50 border-0 p-4 rounded-2xl outline-none text-sm leading-relaxed" placeholder="Konten bab...">${ch.content}</textarea>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Action Functions
+        function addChapter() { chapters.push({ title: "Bab Baru", content: "", images: [] }); renderChapters(); triggerAutoSave(); }
+        function remove(i) { if(chapters.length>1) { chapters.splice(i, 1); renderChapters(); triggerAutoSave(); } }
+        function move(i, d) { let n = i+d; if(n>=0 && n<chapters.length) { [chapters[i], chapters[n]] = [chapters[n], chapters[i]]; renderChapters(); triggerAutoSave(); } }
+        async function upImg(e, i) {
+            const f = e.target.files[0]; if(!f) return;
+            toggleLoader(true, "Optimizing Image...");
+            const opt = await optimizeImage(await f.arrayBuffer());
+            chapters[i].images.push({ id: "img_"+Date.now(), data: opt });
+            toggleLoader(false); renderChapters(); triggerAutoSave();
+        }
+        function delImg(ci, ii) { chapters[ci].images.splice(ii, 1); renderChapters(); triggerAutoSave(); }
+        function toggleLoader(s, t="") { document.getElementById('loader').style.display = s?'flex':'none'; document.getElementById('loaderText').innerText = t; }
+        
+        function clearData() {
+            if(confirm("Hapus semua draft?")) {
+                const tx = db.transaction("state", "readwrite");
+                tx.objectStore("state").clear();
+                location.reload();
+            }
+        }
+
+        // --- EPUB Builder ---
+        async function generateEpub() {
+            toggleLoader(true, "Building EPUB...");
+            const zip = new JSZip();
+            const title = document.getElementById('title').value || "Hikari Book";
+            const author = document.getElementById('author').value || "Unknown";
+            const uuid = "urn:uuid:" + self.crypto.randomUUID();
+
+            zip.file("mimetype", "application/epub+zip", { compression: "STORE" });
+            zip.folder("META-INF").file("container.xml", `<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`);
+
+            let manifest = ""; let spine = ""; let ncx = "";
+            chapters.forEach((ch, i) => {
+                const f = `ch${i+1}.xhtml`;
+                let imgH = "";
+                ch.images.forEach(img => {
+                    zip.folder("OEBPS/Images").file(`${img.id}.jpg`, img.data);
+                    manifest += `<item id="${img.id}" href="Images/${img.id}.jpg" media-type="image/jpeg"/>\n`;
+                    imgH += `<div style="text-align:center;margin:1em 0;"><img src="../Images/${img.id}.jpg" style="max-width:100%;"/></div>\n`;
+                });
+                const html = `<?xml version="1.0" encoding="utf-8"?><!DOCTYPE html><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${ch.title}</title><style>body{padding:5%;line-height:1.6;font-family:sans-serif;}h2{text-align:center;border-bottom:1px solid #eee;padding-bottom:10px;}</style></head><body><h2>${ch.title}</h2>${imgH}<div style="white-space:pre-wrap;">${ch.content}</div></body></html>`;
+                zip.folder("OEBPS/Text").file(f, html);
+                manifest += `<item id="item${i+1}" href="Text/${f}" media-type="application/xhtml+xml"/>\n`;
+                spine += `<itemref idref="item${i+1}"/>\n`;
+                ncx += `<navPoint id="n${i+1}" playOrder="${i+1}"><navLabel><text>${ch.title}</text></navLabel><content src="Text/${f}"/></navPoint>\n`;
+            });
+
+            zip.folder("OEBPS").file("content.opf", `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" unique-identifier="id" version="3.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${title}</dc:title><dc:creator>${author}</dc:creator><dc:language>id</dc:language><dc:identifier id="id">${uuid}</dc:identifier><meta property="dcterms:modified">${new Date().toISOString().split('.')[0]}Z</meta></metadata><manifest><item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/>${manifest}</manifest><spine toc="ncx">${spine}</spine></package>`);
+            zip.folder("OEBPS").file("toc.ncx", `<?xml version="1.0" encoding="UTF-8"?><ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1"><head><meta name="dtb:uid" content="${uuid}"/></head><docTitle><text>${title}</text></docTitle><navMap>${ncx}</navMap></ncx>`);
+
+            const blob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: {level:9} });
+            const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${title.replace(/\s+/g,'_')}.epub`; a.click();
+            toggleLoader(false);
+        }
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
