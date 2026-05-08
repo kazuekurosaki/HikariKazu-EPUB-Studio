@@ -7,7 +7,7 @@
   "theme_color": "#4f46e5",
   "icons": [
     {
-      "src": "https://cdn-icons-png.flaticon.com/512/3429/3429157.png",
+      "src": "src/images/hikari-logo.jpg",
       "sizes": "512x512",
       "type": "image/png"
     }
