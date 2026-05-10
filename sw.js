@@ -1,4 +1,4 @@
-const CACHE_NAME = 'hikari-epub-studio';
+const CACHE_NAME = 'hikari-v6';
 const ASSETS = [
   'index.html',
   'manifest.json',
